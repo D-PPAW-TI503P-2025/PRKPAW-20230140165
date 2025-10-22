@@ -8,9 +8,9 @@ Tugas 3
 Dokumentasi Pengerjaan Tugas
 | Keterangan | Screenshot |
 | :---         |     :---:      |
-| POST  |   ![Hasil POST](./checkin.jpg) |
-| POST  |   ![Hasil POST](./checkinduakali.jpg) |
-| POST  |   ![Hasil POST](./checkout.jpg) |
-| POST  |   ![Hasil POST](./checkoutduakali.jpg) |
-| GET |   ![Hasil GET role karyawan](./reportsdailynoadmin.jpg) |
-| GET |   ![Hasil GET role admin](./reportsdailyadmin.jpg) |
+| POST  |   ![Hasil POST](./screenshoot/checkin.jpg) |
+| POST  |   ![Hasil POST](./screenshoot/checkinduakali.jpg) |
+| POST  |   ![Hasil POST](./screenshoot/checkout.jpg) |
+| POST  |   ![Hasil POST](./screenshoot/checkoutduakali.jpg) |
+| GET |   ![Hasil GET role karyawan](./screenshoot/reportsdailynoadmin.jpg) |
+| GET |   ![Hasil GET role admin](./screenshoot/reportsdailyadmin.jpg) |
