@@ -8,8 +8,8 @@ Tugas 2
 Dokumentasi Pengerjaan Tugas
 | Keterangan | Screenshot |
 | :---         |     :---:      |
-| GET  |   ![Hasil GET Data](./GET.png) |
-| POST  |   ![Hasil POST Data](./POST.png) |
-| PUT  |   ![Hasil PUT Data](./PUT.png) |
-| DELETE    |   ![Hasil DELETE Data](./DELETE.png) |
-| AFTER DELETE    |   ![Hasil AFTER DELETE Data](./AFTER%20DELETE.png) |
+| GET  |   ![Hasil GET Data](./screenshot/GET.png) |
+| POST  |   ![Hasil POST Data](./screenshot/POST.png) |
+| PUT  |   ![Hasil PUT Data](./screenshot/PUT.png) |
+| DELETE    |   ![Hasil DELETE Data](./screenshot/DELETE.png) |
+| AFTER DELETE    |   ![Hasil AFTER DELETE Data](./screenshot/AFTER%20DELETE.png) |
