@@ -9,5 +9,5 @@ Dokumentasi Pengerjaan Tugas
 | Keterangan | Screenshot |
 | :---         |     :---:      |
 | POST  |   ![Register](./screenshoot/register.png) |
-| POST  |   ![Login](./screenshoot/login.png) |
+| POST  |   ![login](./screenshoot/login.png) |
 | POST  |   ![Dashboard](./screenshoot/dashboard.png) |
