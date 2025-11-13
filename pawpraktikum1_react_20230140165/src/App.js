@@ -1,34 +1,29 @@
-import React, { useState } from 'react';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
+import DashboardPage from './components/DashboardPage';
 
 function App() {
-  // 1. Definisikan state untuk menyimpan nama pengguna.
-  //    useState('') akan membuat variabel 'nama' dengan nilai awal kosong.
-  const [nama, setNama] = useState('');
-
-  // 2. Fungsi ini akan dipanggil setiap kali ada perubahan pada input.
-  //    event.target.value mengambil nilai dari input teks.
-  const handleInputChange = (event) => {
-    setNama(event.target.value);
-  };
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Aplikasi Sederhana React</h1>
-        
-        {/* 3. Buat input teks */}
-        <input 
-          type="text"
-          placeholder="Masukkan nama Anda"
-          value={nama} // Nilai input terikat ke state 'nama'
-          onChange={handleInputChange} // Panggil fungsi saat ada perubahan
-        />
+    <Router>
+      <div className="min-h-screen bg-gray-100">
+        {/* Navigasi (untuk kemudahan testing) */}
+        <nav className="p-4 bg-gray-800 text-white shadow-md">
+          <Link to="/login" className="mr-6 hover:text-blue-400 transition">Login</Link>
+          <Link to="/register" className="hover:text-blue-400 transition">Register</Link>
+        </nav>
 
-        {/* 4. Tampilkan pesan 'Hello, [nama]!' */}
-        <h2>Hello, {nama}!</h2>
-      </header>
-    </div>
+        {/* Definisi Routes */}
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Default route akan mengarah ke Login */}
+          <Route path="/" element={<LoginPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
