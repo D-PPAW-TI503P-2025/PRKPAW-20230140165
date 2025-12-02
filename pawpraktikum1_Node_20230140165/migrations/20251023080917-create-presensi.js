@@ -11,26 +11,29 @@ module.exports = {
       },
       userId: {
         type: Sequelize.INTEGER,
-        allowNull: false // Ditambahkan: userId tidak boleh kosong
+        allowNull: false,
+        // [FIX KRITIS] Setting Foreign Key ke tabel Users
+        references: {
+          model: 'Users', // Nama tabel tujuan
+          key: 'id',      // Nama kolom tujuan
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
-      nama: { // Ditambahkan: Kolom nama
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      checkIn: { // Ditambahkan: Kolom checkIn
+      checkIn: {
         allowNull: false,
         type: Sequelize.DATE
       },
-      checkOut: { // Ditambahkan: Kolom checkOut
-        allowNull: true, // checkOut bisa kosong saat pertama kali check-in
+      checkOut: {
+        allowNull: true,
         type: Sequelize.DATE
       },
       createdAt: {
-        allowNull: false,
+        allowNull: false, // Sebaiknya disetel false untuk integritas data
         type: Sequelize.DATE
       },
       updatedAt: {
-        allowNull: false,
+        allowNull: false, // Sebaiknya disetel false untuk integritas data
         type: Sequelize.DATE
       }
     });

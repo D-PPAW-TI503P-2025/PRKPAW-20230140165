@@ -2,11 +2,11 @@
 
 const express = require('express');
 const router = express.Router();
-const reportController = require('../controllers/reportController'); // Sudah benar
-const { addUserData, isAdmin } = require('../middleware/permissionMiddleware');
+// Pastikan presensiController diimpor dengan benar
+const presensiController = require('../controllers/presensiController'); 
+const { authenticateToken, isAdmin } = require('../middleware/permissionMiddleware');
 
-// UBAH .getDailyReport MENJADI .dailyReport
-router.get('/daily', [addUserData, isAdmin], reportController.dailyReport); 
-                                                            // ^---- PERUBAHAN INI
+// Route Laporan yang menangani endpoint /daily
+router.get('/daily', authenticateToken, isAdmin, presensiController.dailyReport); 
 
 module.exports = router;
