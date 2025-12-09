@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // Tambahkan useRef, useCallback
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// [MODUL 9] Import komponen peta Leaflet
+// [Modul 9] Import komponen peta Leaflet
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'; 
+// [Modul 10] Import Webcam
+import Webcam from 'react-webcam'; 
+import 'leaflet/dist/leaflet.css';
 
 const API_URL = "http://localhost:5000/api/presensi"; 
-// Ganti toLocaleTimeString menjadi toLocaleString untuk menampilkan tanggal
 const TIMEZONE_OPTIONS_FULL = { 
     timeZone: 'Asia/Jakarta', 
     day: '2-digit', 
@@ -18,13 +20,19 @@ const TIMEZONE_OPTIONS_FULL = {
 };
 
 function AttendancePage() {
+    // State Presensi
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [checkInTime, setCheckInTime] = useState(null); 
     const [checkOutTime, setCheckOutTime] = useState(null); 
     
-    const [coords, setCoords] = useState(null); 
+    // [Modul 9] State Lokasi
+    const [coords, setCoords] = useState(null); // {lat, lng}
     const [locationError, setLocationError] = useState(null); 
+    
+    // [Modul 10] State Kamera
+    const [image, setImage] = useState(null); // State Base64 foto
+    const webcamRef = useRef(null); // Ref untuk akses kamera
     
     const navigate = useNavigate();
 
@@ -37,12 +45,11 @@ function AttendancePage() {
             return null;
         }
         return {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
         };
     };
 
+    // [Modul 9] Logic Geolocation
     const getLocation = () => {
         setLocationError(null);
         if (navigator.geolocation) {
@@ -65,10 +72,23 @@ function AttendancePage() {
     useEffect(() => { 
         getLocation();
     }, []); 
-
+    
+    // [Modul 10] Logic Capture Foto
+    const capture = useCallback(() => {
+        if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot();
+            setImage(imageSrc); // Menyimpan Base64 string
+        }
+    }, [webcamRef]);
+    
+    // [Modul 9 & 10] Handle Check-In (Kirim FormData)
     const handleCheckIn = async () => {
         if (!coords) {
             setError("Lokasi belum didapatkan. Mohon izinkan akses lokasi."); 
+            return;
+        }
+        if (!image) { // [Validasi Modul 10] Foto wajib ada
+            setError("Foto selfie wajib diambil sebelum Check-In.");
             return;
         }
 
@@ -81,18 +101,30 @@ function AttendancePage() {
         setCheckInTime(null); 
 
         try {
+            // 1. Konversi Base64 menjadi Blob
+            const blob = await (await fetch(image)).blob();
+
+            // 2. Buat FormData
+            const formData = new FormData();
+            formData.append('latitude', String(coords.lat)); 
+            formData.append('longitude', String(coords.lng));
+            formData.append('image', blob, 'selfie.jpeg'); // Key 'image' harus sesuai Multer
+
+            // 3. Kirim FormData (Hanya kirim token di header)
             const response = await axios.post(
                 `${API_URL}/check-in`, 
+                formData, 
                 { 
-                    // [FIX KRITIS FINAL] Konversi ke String untuk stabilitas DECIMAL MySQL
-                    latitude: String(coords.lat),  
-                    longitude: String(coords.lng) 
-                }, 
-                config
+                    headers: { 
+                        Authorization: `Bearer ${getToken()}`,
+                        // Biarkan Axios mengatur Content-Type: multipart/form-data
+                    } 
+                }
             );
             
             const data = response.data.data;
             setMessage(response.data.message);
+            setImage(null); // Reset foto setelah sukses
             
             if (data && data.checkIn) {
                 setCheckInTime(new Date(data.checkIn));
@@ -103,6 +135,7 @@ function AttendancePage() {
         }
     };
 
+    // [Fungsi Check-Out]
     const handleCheckOut = async () => {
         const config = createConfig();
         if (!config) return;
@@ -130,7 +163,7 @@ function AttendancePage() {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center pt-8">
 
-            {locationError && ( /* Tampilkan error lokasi */
+            {locationError && ( 
                 <p className="text-red-600 mb-4 px-8 text-center">{locationError}</p>
             )}
 
@@ -157,6 +190,33 @@ function AttendancePage() {
                 </div>
             )}
             
+            {/* [MODUL 10] Tampilan Kamera/Foto Preview */}
+            <div className="my-4 border rounded-lg overflow-hidden w-full max-w-md shadow-lg bg-black">
+                {image ? (
+                    <img src={image} alt="Selfie Presensi" className="w-full" />
+                ) : (
+                    <Webcam
+                        audio={false}
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        className="w-full"
+                    />
+                )}
+            </div>
+
+            {/* [MODUL 10] Tombol Ambil/Foto Ulang */}
+            <div className="mb-4 w-full max-w-md">
+                {!image ? (
+                    <button onClick={capture} className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700">
+                        Ambil Foto 📸
+                    </button>
+                ) : (
+                    <button onClick={() => setImage(null)} className="w-full py-3 px-4 bg-gray-500 text-white font-semibold rounded-md shadow-sm hover:bg-gray-600">
+                        Foto Ulang 🔄
+                    </button>
+                )}
+            </div>
+
             {/* Card Check-in/Check-out */}
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center my-4">
                 <h2 className="text-3xl font-bold mb-6 text-gray-800">Lakukan Presensi</h2>

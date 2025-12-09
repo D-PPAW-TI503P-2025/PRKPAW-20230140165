@@ -8,9 +8,22 @@ function ReportPage() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     
-    // API_URL harus mengarah ke endpoint laporan Anda
+    // API_URL dan BASE_URL untuk mengakses foto statis
     const API_URL = "http://localhost:5000/api/presensi/reports/daily"; 
+    const BASE_URL = "http://localhost:5000/"; // <-- URL dasar untuk folder uploads/
     const TIMEZONE = "Asia/Jakarta";
+
+    // Opsi waktu lengkap untuk format WIB yang konsisten
+    const TIMEZONE_OPTIONS_FULL = { 
+        timeZone: TIMEZONE, 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
+    };
 
 
     const fetchReports = async (query = "") => {
@@ -31,13 +44,11 @@ function ReportPage() {
             // Buat URL dengan query parameter nama
             const url = `${API_URL}?nama=${query}`; 
 
-            // [FIX KRITIS] TAMBAHKAN PEMANGGILAN AXIOS DAN SET STATE
             const response = await axios.get(url, config); 
             
-            setReports(response.data); // Simpan data laporan ke state
+            setReports(response.data); 
             setError(null); 
 
-            // Debugging (Anda bisa lihat ini di Console browser)
             console.log("Data Laporan Diterima:", response.data); 
 
         } catch (err) {
@@ -46,21 +57,20 @@ function ReportPage() {
         }
     };
 
-    // Panggil fetchReports saat komponen dimuat (useEffect)
     useEffect(() => {
         fetchReports("");
-    }, []); // Dependency array kosong agar hanya berjalan sekali saat mount
+    }, []); 
     
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         fetchReports(searchTerm);
     };
     
-    // Helper untuk memformat waktu
+    // Helper untuk memformat waktu (dengan tanggal lengkap WIB)
     const formatTime = (time) => {
         if (!time) return "Belum Check-Out";
         try {
-            return new Date(time).toLocaleString("id-ID", { timeZone: TIMEZONE });
+            return new Date(time).toLocaleString("id-ID", TIMEZONE_OPTIONS_FULL); 
         } catch (e) {
             return "Waktu Invalid";
         }
@@ -98,15 +108,12 @@ function ReportPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Nama
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Check-In
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Check-Out
-                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latitude</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longitude</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bukti Foto</th> 
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -114,7 +121,6 @@ function ReportPage() {
                                 reports.map((presensi) => (
                                     <tr key={presensi.id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {/* Ambil nama dari objek relasi User */}
                                             {presensi.User ? presensi.User.nama : "N/A"}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -123,14 +129,33 @@ function ReportPage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {formatTime(presensi.checkOut)}
                                         </td>
+                                        
+                                        {/* Tampilkan Latitude */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {presensi.latitude || 'N/A'}
+                                        </td>
+                                        {/* Tampilkan Longitude */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {presensi.longitude || 'N/A'}
+                                        </td>
+
+                                        {/* Kolom Bukti Foto (Thumbnail) */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {presensi.buktiFoto && (
+                                                <a href={`${BASE_URL}${presensi.buktiFoto}`} target="_blank" rel="noopener noreferrer">
+                                                    <img 
+                                                        src={`${BASE_URL}${presensi.buktiFoto}`} 
+                                                        alt="Bukti Selfie" 
+                                                        style={{ width: '50px', height: 'auto', cursor: 'pointer' }} 
+                                                    />
+                                                </a>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td
-                                        colSpan="3"
-                                        className="px-6 py-4 text-center text-gray-500"
-                                    >
+                                    <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
                                         Tidak ada data yang ditemukan.
                                     </td>
                                 </tr>

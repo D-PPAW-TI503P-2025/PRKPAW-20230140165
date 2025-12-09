@@ -1,17 +1,41 @@
-const { Presensi, User, Op } = require('../models');
+const { Presensi, User } = require('../models');
 const { validationResult } = require('express-validator');
+const { Op } = require("sequelize");
+const multer = require('multer'); // [MODUL 10]
+const path = require('path'); // [MODUL 10]
 
+// --- Konfigurasi Multer (File Handling) ---
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // Simpan di folder uploads/
+    },
+    filename: (req, file, cb) => {
+        // Format nama file: userId-timestamp.ext
+        cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+    }
+};
+
+exports.upload = multer({ storage: storage, fileFilter: fileFilter }); // Export Middleware Multer
 
 // --- Presensi Functions ---
 
-// controllers/presensiController.js
-
 exports.checkIn = async (req, res) => {
     try {
-        const userId = req.user.id; // Ambil dari JWT
+        const userId = req.user.id;
 
-        // [MODUL 9 FIX] Ambil latitude dan longitude dari body
+        // Ambil data lokasi dari req.body (dikirim oleh FormData)
         const { latitude, longitude } = req.body;
+
+        // [MODUL 10 FIX] Ambil path foto dari Multer
+        const buktiFoto = req.file ? req.file.path : null;
 
         const existingPresensi = await Presensi.findOne({
             where: { userId: userId, checkOut: null },
@@ -21,25 +45,29 @@ exports.checkIn = async (req, res) => {
             return res.status(400).json({ message: "Anda sudah Check-In dan belum Check-Out." });
         }
 
-        // [MODUL 9 FIX] Simpan data lokasi ke database
         const newPresensi = await Presensi.create({
             userId: userId,
             checkIn: new Date(),
-            latitude: latitude, // Simpan latitude [cite: 308]
-            longitude: longitude // Simpan longitude [cite: 309]
+            latitude: latitude,
+            longitude: longitude,
+            // [MODUL 10 FIX] Simpan path foto ke database
+            buktiFoto: buktiFoto
         });
-
 
         return res.status(201).json({ message: "Check-In berhasil", data: newPresensi });
     } catch (error) {
-        console.error(error);
+        console.error("CheckIn Error:", error);
+        // [MODUL 10 FIX] Tambahkan error handling spesifik untuk Multer
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: 'Ukuran file terlalu besar.' });
+        }
         return res.status(500).json({ message: "Terjadi kesalahan pada server." });
     }
 };
 
 exports.checkOut = async (req, res) => {
     try {
-        const userId = req.user.id; // Ambil dari JWT
+        const userId = req.user.id;
         const presensiToUpdate = await Presensi.findOne({
             where: { userId: userId, checkOut: null },
         });

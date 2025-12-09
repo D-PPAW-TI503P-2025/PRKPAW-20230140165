@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const presensiController = require('../controllers/presensiController');
-const { authenticateToken, isAdmin } = require('../middleware/permissionMiddleware');
 const { body, validationResult } = require('express-validator');
-const Presensi = require('../models').Presensi;
-const { dailyReport } = require('../controllers/presensiController');
+
+// [FIX KRITIS] Import handlers secara destructuring dari controller
+const {
+    checkIn,
+    checkOut,
+    updatePresensi,
+    deletePresensi,
+    dailyReport,
+    upload // <--- AMBIL MIDDLEWARE UPLOAD
+} = require('../controllers/presensiController');
+
+const { authenticateToken, isAdmin } = require('../middleware/permissionMiddleware');
 
 const validatePresensiUpdate = [
     body('checkIn').optional().isISO8601().withMessage('Format checkIn harus berupa tanggal/waktu ISO 8601 yang valid.'),
@@ -12,14 +20,19 @@ const validatePresensiUpdate = [
 ];
 
 // Rute Presensi (Memerlukan Login JWT)
-router.post('/check-in', authenticateToken, presensiController.checkIn);
-router.post('/check-out', authenticateToken, presensiController.checkOut);
+// [FIX MODUL 10] Gunakan 'upload' yang diimpor secara destructuring
+router.post('/check-in',
+    authenticateToken,
+    upload.single('image'), // <--- Gunakan 'upload' langsung
+    checkIn);              // <--- Gunakan 'checkIn' langsung
 
-// Rute Laporan DIHAPUS DARI SINI, SUDAH ADA DI routes/reports.js
-router.get('/reports/daily', authenticateToken, isAdmin, presensiController.dailyReport);
+router.post('/check-out', authenticateToken, checkOut);
+
+// Rute Laporan Admin
+router.get('/reports/daily', authenticateToken, isAdmin, dailyReport);
 
 // Rute Update & Delete (Memerlukan Login JWT)
-router.put('/:id', authenticateToken, validatePresensiUpdate, presensiController.updatePresensi);
-router.delete('/:id', authenticateToken, presensiController.deletePresensi);
+router.put('/:id', authenticateToken, validatePresensiUpdate, updatePresensi);
+router.delete('/:id', authenticateToken, deletePresensi);
 
 module.exports = router;
