@@ -9,4 +9,5 @@ Dokumentasi Pengerjaan Tugas
 | Keterangan | Screenshot |
 | :---         |     :---:      |
 | Tugas14  |   ![Tugas14](./screenshoot/Tugas14.jpeg) |
+| Tugas14  |   ![Tugas14(2)](./screenshoot/Tugas14(2).jpeg) |
 
